@@ -5,7 +5,8 @@ $(function () {
 	};
 
 	/**
-	 * @param  {Jqusery Object}
+	 * Initializes input. Sets all dependences
+	 * @param {Jquery Object}  Wrapper for input
 	 */
 	NumberInput.prototype._init = function _init($container) {
 		this.$container = $container;
@@ -18,34 +19,152 @@ $(function () {
 		this._bindEvents();
 	};
 
-	NumberInput.prototype._increment = _increment;
-	NumberInput.prototype._decrement = _decrement;
-	NumberInput.prototype._getValueFromInput = _getValueFromInput;
-	NumberInput.prototype._getErrorByCode = _getErrorByCode;
-	NumberInput.prototype._incrementValue = _incrementValue;
-	NumberInput.prototype._decrementValue = _decrementValue;
-	NumberInput.prototype._showError = _showError;
-	NumberInput.prototype._hideError = _hideError;
-	NumberInput.prototype._setValue = _setValue;
-	NumberInput.prototype._setValueToInput = _setValueToInput;
-	NumberInput.prototype._checkInputValue = _checkInputValue;
-	NumberInput.prototype._bindEvents = _bindEvents;
+	/**
+	 * This is the logic of increment. This function calls functions
+	 * to get value from input, increment value and set new value
+	 */
+	NumberInput.prototype._increment = function _increment() {
+		var value = this._getValueFromInput();
+		var newValue = this._incrementValue(value);
 
-	NumberInput.prototype.setValue = setValue;
-	NumberInput.prototype.getValue = getValue;
+		this._setValue(newValue);
+	};
 
+	/**
+	 * This is the logic of decrement. This function calls functions
+	 * to get value from input, decrement value and set new value
+	 */
+	NumberInput.prototype._decrement = function _decrement() {
+		var value = this._getValueFromInput();
+		var newValue = this._decrementValue(value);
 
+		this._setValue(newValue);
+	};
 
+	/**
+	 * Get value from input
+	 * @return {String}  Value from input
+	 */
+	NumberInput.prototype._getValueFromInput = function _getValueFromInput() {
+		return this.$input.val();
+	};
 
-	function getValue() {
-		return this._getValueFromInput();
-	}
+	/**
+	 * Get error by code
+	 * @param  {Number}  Error code
+	 * @return {String}	 Error text
+	 */
+	NumberInput.prototype._getErrorByCode = function _getErrorByCode(errorCode) {
+		var errorCodes = {
+			'0': 'Непредвиденная ошибка, отсутсвует errorCode',
+			'1': 'Введите число',
+			'2': 'Нельзя ввести число меньше ' + this.minValue,
+			'3': 'Нельзя ввести число больше ' + this.maxValue
+		};
+		var errorCode = errorCode || '0';
 
-	function setValue(value) {
-		this._setValue(value);
-	}
+		return errorCodes[errorCode];
+	};
 
-	function _bindEvents() {
+	/**
+	 * Increment value
+	 * @param  {Number}  Value to increment
+	 * @return {Number}  Incremented number
+	 */
+	NumberInput.prototype._incrementValue = function _incrementValue(value) {
+		return ++value;
+	};
+
+	/**
+	 * Decrement value
+	 * @param  {Number}  Value to decrement
+	 * @return {Number}  Decremented number
+	 */
+	NumberInput.prototype._decrementValue = function _decrementValue(value) {
+		return --value;
+	};
+
+	/**
+	 * Show error text
+	 * @param {String}  Error code text
+	 */
+	NumberInput.prototype._showError = function _showError(error) {
+		this.$errorArea.html(error);
+	};
+
+	/**
+	 * Hide error text
+	 */
+	NumberInput.prototype._hideError = function _hideError() {
+		this.$errorArea.html('');
+	};
+
+	/**
+	 * This is the logic of setting value. This function calls functions
+	 * to check value and show result
+	 * @param {Number}  Value to set to input
+	 */
+	NumberInput.prototype._setValue = function _setValue(value) {
+		var checkStatus = this._checkInputValue(value);
+
+		if (checkStatus.isValid) {
+			this._hideError();
+			this._setValueToInput(value);
+
+		} else {
+			this._showError(this._getErrorByCode(checkStatus.errorCode));
+		}
+	};
+
+	/**
+	 * Set value to input
+	 * @param {Number}  Number to set to input
+	 */
+	NumberInput.prototype._setValueToInput = function _setValueToInput(value) {
+		this.$input
+			.val(value)
+			.trigger('_updated', { value: value });
+
+	};
+
+	/**
+	 * Check value
+	 * @param  {Number}  Value form input
+	 * @return {Object}  Checking result
+	 */
+	NumberInput.prototype._checkInputValue = function _checkInputValue(value) {
+
+		if (value < this.minValue) {
+			return {
+				isValid: false,
+				errorCode: '2'
+			};
+		}
+
+		if (value > this.maxValue) {
+			return {
+				isValid: false,
+				errorCode: '3'
+			};
+		}
+
+		if (!(isNaN(parseFloat(value)))) {
+			return {
+				isValid: true,
+				errorCode: null
+			};
+		} else {
+			return {
+				isValid: false,
+				errorCode: '1'
+			};
+		};
+	};
+
+	/**
+	 * Bind events
+	 */
+	NumberInput.prototype._bindEvents = function _bindEvents() {
 		this.$incButton.on('click', function () {
 			this._increment();
 		}.bind(this));
@@ -76,102 +195,21 @@ $(function () {
 		}.bind(this));
 	};
 
-	function _increment() {
-		// Логика инкремента
-		var value = this._getValueFromInput();
-		var newValue = this._incrementValue(value);
-
-		this._setValue(newValue);
+	/**
+	 * Set value to input
+	 * @param {Number}  Value to set to input
+	 */
+	NumberInput.prototype.setValue = function setValue(value) {
+		this._setValue(value);
 	};
 
-	function _decrement() {
-		// Логика декремента
-		var value = this._getValueFromInput();
-		var newValue = this._decrementValue(value);
-
-		this._setValue(newValue);
+	/**
+	 * Get value from input
+	 * @return {String}  Get value from input
+	 */
+	NumberInput.prototype.getValue = function getValue() {
+		return this._getValueFromInput();
 	};
-
-	function _setValue(value) {
-		var checkStatus = this._checkInputValue(value);
-
-		if (checkStatus.isValid) {
-			this._hideError();
-			this._setValueToInput(value);
-
-		} else {
-			this._showError(this._getErrorByCode(checkStatus.errorCode));
-		}
-	};
-
-	function _getValueFromInput() {
-		return this.$input.val();
-	};
-
-	function _getErrorByCode(errorCode) {
-		var errorCodes = {
-			'0': 'Непредвиденная ошибка, отсутсвует errorCode',
-			'1': 'Введите число',
-			'2': 'Нельзя ввести число меньше ' + this.minValue,
-			'3': 'Нельзя ввести число больше ' + this.maxValue
-		};
-		var errorCode = errorCode || '0';
-
-		return errorCodes[errorCode];
-	}
-
-	function _incrementValue(value) {
-		return ++value;
-	};
-
-	function _decrementValue(value) {
-		return --value;
-	};
-
-	function _showError(error) {
-		this.$errorArea.html(error);
-	};
-
-	function _hideError() {
-		this.$errorArea.html('');
-	};
-
-	function _setValueToInput(value) {
-		this.$input
-			.val(value)
-			.trigger('_updated', { value: value });
-
-	};
-
-	function _checkInputValue(value) {
-
-		if (value < this.minValue) {
-			return {
-				isValid: false,
-				errorCode: '2'
-			};
-		}
-
-		if (value > this.maxValue) {
-			return {
-				isValid: false,
-				errorCode: '3'
-			};
-		}
-
-		if (!(isNaN(parseFloat(value)))) {
-			return {
-				isValid: true,
-				errorCode: null
-			};
-		} else {
-			return {
-				isValid: false,
-				errorCode: '1'
-			};
-		};
-	};
-
 
 	$('._js-input-wrapper').each(function () {
 		new NumberInput($(this));
